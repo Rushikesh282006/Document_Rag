@@ -27,8 +27,8 @@ const KEY_TOKEN = "rag.token";
 const KEY_MODE = "rag.mode";
 const KEY_BASE = "rag.base";
 export const DEFAULT_BASE =
-  (typeof import.meta !== "undefined" && import.meta.env?.["VITE_API_BASE_URL"]) ||
-  "http://localhost:8000/api/v1";
+  (typeof import.meta !== "undefined" && (import.meta.env?.["VITE_API_BASE_URL"] || import.meta.env?.["VITE_API_URL"])) ||
+  "https://document-rag-z7e2.onrender.com/api/v1";
 
 const ls = () => (typeof window === "undefined" ? null : window.localStorage);
 export const settings = {
@@ -36,8 +36,23 @@ export const settings = {
   set token(v: string | null) { v ? ls()?.setItem(KEY_TOKEN, v) : ls()?.removeItem(KEY_TOKEN); },
   get mode(): Mode { return (ls()?.getItem(KEY_MODE) as Mode) ?? "live"; },
   set mode(v: Mode) { ls()?.setItem(KEY_MODE, v); },
-  get base() { return ls()?.getItem(KEY_BASE) ?? DEFAULT_BASE; },
-  set base(v: string) { ls()?.setItem(KEY_BASE, v.replace(/\/$/, "")); },
+  get base() {
+    let val = ls()?.getItem(KEY_BASE);
+    if (!val || (typeof window !== "undefined" && window.location.hostname !== "localhost" && val.includes("localhost"))) {
+      val = DEFAULT_BASE;
+    }
+    if (val && !val.includes("/api/v1")) {
+      val = val.replace(/\/$/, "") + "/api/v1";
+    }
+    return val;
+  },
+  set base(v: string) {
+    let clean = (v || "").trim().replace(/\/$/, "");
+    if (clean && !clean.includes("/api/v1")) {
+      clean = clean + "/api/v1";
+    }
+    ls()?.setItem(KEY_BASE, clean);
+  },
 };
 
 

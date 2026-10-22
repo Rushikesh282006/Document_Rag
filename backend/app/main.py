@@ -54,18 +54,13 @@ def create_application() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
     # Cross-Origin Resource Sharing (CORS) setup
-    allow_origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS]
+    raw_origins = [str(o).rstrip("/") for o in settings.BACKEND_CORS_ORIGINS] if isinstance(settings.BACKEND_CORS_ORIGINS, list) else [str(settings.BACKEND_CORS_ORIGINS).rstrip("/")]
+    has_wildcard = "*" in raw_origins or any(o == "*" for o in raw_origins)
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=allow_origins if "*" not in allow_origins else [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:5173",
-            "http://localhost:8080",
-        ],
-        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?" if "*" in allow_origins else None,
+        allow_origins=[o for o in raw_origins if o != "*"] if not has_wildcard else [],
+        allow_origin_regex=r".*" if has_wildcard else r"https://.*\.vercel\.app|https?://(localhost|127\.0\.0\.1)(:\d+)?",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
