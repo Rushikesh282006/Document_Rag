@@ -55,15 +55,30 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_database_url(cls, v: Any) -> str:
         if isinstance(v, str):
-            # asyncpg requires ?ssl=require instead of ?sslmode=require
-            if "postgresql+asyncpg://" in v and "sslmode=" in v:
-                v = v.replace("sslmode=", "ssl=")
-            # Also ensure driver prefix is postgresql+asyncpg://
-            elif v.startswith("postgresql://"):
-                v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
-                if "sslmode=" in v:
-                    v = v.replace("sslmode=", "ssl=")
-            return v
+            from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+            parsed = urlparse(v)
+            scheme = parsed.scheme
+            if scheme in ("postgresql", "postgres", "postgresql+psycopg2"):
+                scheme = "postgresql+asyncpg"
+
+            params = parse_qs(parsed.query)
+            new_params = {}
+
+            # asyncpg expects 'ssl=require' instead of libpq's 'sslmode=require'
+            if "ssl" in params or "sslmode" in params:
+                ssl_val = params.get("ssl", params.get("sslmode", ["require"]))[0]
+                if ssl_val not in ("disable", "false", "0"):
+                    new_params["ssl"] = "require"
+
+            # Whitelist valid asyncpg connection parameters and discard libpq-only parameters
+            # (such as channel_binding, gssencmode, sslrootcert, etc.)
+            asyncpg_valid_params = {"timeout", "command_timeout", "statement_cache_size", "server_settings"}
+            for k, val in params.items():
+                if k in asyncpg_valid_params:
+                    new_params[k] = val[0]
+
+            new_query = urlencode(new_params)
+            return urlunparse(parsed._replace(scheme=scheme, query=new_query))
         return str(v)
 
     # Redis & Celery
