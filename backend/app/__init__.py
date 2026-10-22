@@ -1,0 +1,2 @@
+"""Multi-Tenant Production-Ready RAG API Application Package."""
+__version__ = "0.1.0"

@@ -1,0 +1,40 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic[email]>=2.7.0
+pydantic-settings>=2.2.0
+email-validator>=2.1.0
+
+
+# Database & Vectors
+sqlalchemy[asyncio]>=2.0.30
+asyncpg>=0.29.0
+alembic>=1.13.0
+pgvector>=0.2.5
+
+# Task Queue & Cache
+celery[redis]>=5.4.0
+redis>=5.0.4
+
+# Security & Auth
+pyjwt[crypto]>=2.8.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.1
+python-multipart>=0.0.9
+slowapi>=0.1.10
+
+# RAG & Document Processing
+pypdf>=4.2.0
+langchain>=0.2.5
+langchain-community>=0.2.5
+langchain-text-splitters>=0.2.0
+langchain-google-genai>=1.0.6
+langchain-openai>=0.1.8
+langchain-groq>=0.1.5
+
+# Utilities & HTTP Client
+httpx>=0.27.0
+python-dotenv>=1.0.1
+
+# Testing & Dev
+pytest>=8.2.0
+pytest-asyncio>=0.23.7

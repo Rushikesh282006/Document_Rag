@@ -1,0 +1,155 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(0.16 0.01 70);
+  --foreground: oklch(0.94 0.015 85);
+  --card: oklch(0.2 0.012 70);
+  --card-foreground: oklch(0.94 0.015 85);
+  --popover: oklch(0.21 0.012 70);
+  --popover-foreground: oklch(0.94 0.015 85);
+  --primary: oklch(0.8 0.15 75);
+  --primary-foreground: oklch(0.18 0.02 70);
+  --secondary: oklch(0.25 0.012 70);
+  --secondary-foreground: oklch(0.94 0.015 85);
+  --muted: oklch(0.24 0.01 70);
+  --muted-foreground: oklch(0.66 0.02 80);
+  --accent: oklch(0.28 0.02 75);
+  --accent-foreground: oklch(0.94 0.015 85);
+  --destructive: oklch(0.65 0.2 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.3 0.012 70);
+  --input: oklch(0.3 0.012 70);
+  --ring: oklch(0.8 0.15 75);
+  --status-pending: oklch(0.82 0.15 90);
+  --status-processing: oklch(0.7 0.13 240);
+  --status-completed: oklch(0.74 0.16 150);
+  --status-failed: oklch(0.65 0.2 27);
+  --chart-1: oklch(0.8 0.15 75);
+  --chart-2: oklch(0.7 0.13 240);
+  --chart-3: oklch(0.74 0.16 150);
+  --chart-4: oklch(0.65 0.2 27);
+  --chart-5: oklch(0.6 0.05 80);
+  --sidebar: oklch(0.13 0.01 70);
+  --sidebar-foreground: oklch(0.94 0.015 85);
+  --sidebar-primary: oklch(0.8 0.15 75);
+  --sidebar-primary-foreground: oklch(0.18 0.02 70);
+  --sidebar-accent: oklch(0.22 0.012 70);
+  --sidebar-accent-foreground: oklch(0.94 0.015 85);
+  --sidebar-border: oklch(0.26 0.012 70);
+  --sidebar-ring: oklch(0.8 0.15 75);
+  --gradient-glow: radial-gradient(ellipse at top, oklch(0.8 0.15 75 / 0.12), transparent 60%);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@theme inline {
+  --color-status-pending: var(--status-pending);
+  --color-status-processing: var(--status-processing);
+  --color-status-completed: var(--status-completed);
+  --color-status-failed: var(--status-failed);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+}
+
+@utility bg-glow {
+  background-image: var(--gradient-glow);
+}
+
+@keyframes caret {
+  50% { opacity: 0; }
+}
+@utility streaming-caret {
+  &::after {
+    content: "▍";
+    color: var(--primary);
+    margin-left: 2px;
+    animation: caret 1s steps(1) infinite;
+  }
+}
+
+.prose-chat { line-height: 1.7; }
+.prose-chat p { margin: 0.5em 0; }
+.prose-chat ul { list-style: disc; padding-left: 1.4em; }
+.prose-chat ol { list-style: decimal; padding-left: 1.4em; }
+.prose-chat h1, .prose-chat h2, .prose-chat h3 { font-family: var(--font-display); font-weight: 600; margin: 0.8em 0 0.3em; }
+.prose-chat a { color: var(--primary); text-decoration: underline; }
+.prose-chat code { font-family: var(--font-mono); font-size: 0.88em; background: var(--muted); padding: 0.1em 0.35em; border-radius: 4px; }
+.prose-chat pre { background: var(--sidebar); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.9em; overflow-x: auto; margin: 0.7em 0; }
+.prose-chat pre code { background: transparent; padding: 0; }
+.prose-chat table { border-collapse: collapse; margin: 0.6em 0; }
+.prose-chat th, .prose-chat td { border: 1px solid var(--border); padding: 0.3em 0.6em; }
