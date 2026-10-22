@@ -51,6 +51,21 @@ class Settings(BaseSettings):
         description="Async SQLAlchemy database URL (PostgreSQL with pgvector)",
     )
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_database_url(cls, v: Any) -> str:
+        if isinstance(v, str):
+            # asyncpg requires ?ssl=require instead of ?sslmode=require
+            if "postgresql+asyncpg://" in v and "sslmode=" in v:
+                v = v.replace("sslmode=", "ssl=")
+            # Also ensure driver prefix is postgresql+asyncpg://
+            elif v.startswith("postgresql://"):
+                v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+                if "sslmode=" in v:
+                    v = v.replace("sslmode=", "ssl=")
+            return v
+        return str(v)
+
     # Redis & Celery
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
