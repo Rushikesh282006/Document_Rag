@@ -38,7 +38,6 @@ A high-performance, production-grade, multi-tenant Retrieval-Augmented Generatio
 - [Frontend Capabilities & UI Features](#frontend-capabilities--ui-features)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Production Deployment](#production-deployment)
-- [License](#license)
 
 ---
 
@@ -533,14 +532,20 @@ curl -X POST "http://localhost:8000/api/v1/query" \
 
 Standard vector search can struggle with exact keyword queries (such as product SKUs, acronyms, or specific numbers), while lexical full-text search misses semantic intent. Groundwork bridges this gap using **Reciprocal Rank Fusion (RRF)**:
 
-1. **Semantic Vector Search**: Generates query embeddings and computes the cosine distance using `pgvector`:
-   $$\text{cosine\_distance} = 1 - \frac{u \cdot v}{\|u\|_2 \|v\|_2}$$
-2. **Lexical Full-Text Search**: Uses PostgreSQL's English stemming dictionary (`to_tsvector` and `plainto_tsquery`) to rank chunks based on keyword matching:
-   $$\text{ts\_rank\_cd}(tsvector, tsquery)$$
-3. **Fusion Scoring**: Combines results from both search passes across candidate chunks using the standard RRF formula with constant $k = 60$:
-   $$RRF(d) = \sum_{m \in M} \frac{1}{k + r_m(d)}$$
-   *where $r_m(d)$ is the rank position of document chunk $d$ in system $m$.*
-4. **Tenant Scoping**: All retrieval queries enforce `user_id = current_user.id`, guaranteeing zero cross-tenant data leakage.
+1. **Semantic Vector Search**: Generates dense query embeddings and calculates cosine distance using `pgvector`:
+   ```text
+   cosine_distance = 1 - (u · v) / (||u||₂ · ||v||₂)
+   ```
+2. **Lexical Full-Text Search**: Uses PostgreSQL's English text dictionary (`to_tsvector` and `plainto_tsquery`) to rank chunks by keyword density:
+   ```text
+   ts_rank_cd(to_tsvector('english', chunk), plainto_tsquery('english', query))
+   ```
+3. **Fusion Scoring (RRF)**: Merges ranked results from both search passes across candidate chunks using standard Reciprocal Rank Fusion (with constant `k = 60`):
+   ```text
+   RRF_Score(d) = Σ [ 1 / (60 + rank_m(d)) ]   for each search system m ∈ {Vector, FTS}
+   ```
+   *where `rank_m(d)` represents the 1-based rank position of chunk `d` in search system `m`.*
+4. **Tenant Scoping**: All retrieval queries strictly filter by `user_id = current_user.id`, guaranteeing zero cross-tenant data leakage.
 
 ---
 
@@ -608,9 +613,3 @@ This configuration:
 - **PostgreSQL**: Managed PostgreSQL with `pgvector` enabled (such as Supabase, Neon, or AWS RDS).
 - **Redis**: Managed Redis instance (Upstash, AWS ElastiCache, or Redis Cloud).
 - **Frontend**: Deploy the static Vite build output (`frontend/dist`) to Cloudflare Pages, Vercel, or Netlify.
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
