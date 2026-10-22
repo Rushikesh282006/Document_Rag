@@ -37,21 +37,10 @@ export const settings = {
   get mode(): Mode { return (ls()?.getItem(KEY_MODE) as Mode) ?? "live"; },
   set mode(v: Mode) { ls()?.setItem(KEY_MODE, v); },
   get base() {
-    let val = ls()?.getItem(KEY_BASE);
-    if (!val || (typeof window !== "undefined" && window.location.hostname !== "localhost" && val.includes("localhost"))) {
-      val = DEFAULT_BASE;
-    }
-    if (val && !val.includes("/api/v1")) {
-      val = val.replace(/\/$/, "") + "/api/v1";
-    }
-    return val;
+    return DEFAULT_BASE.replace(/\/$/, "");
   },
   set base(v: string) {
-    let clean = (v || "").trim().replace(/\/$/, "");
-    if (clean && !clean.includes("/api/v1")) {
-      clean = clean + "/api/v1";
-    }
-    ls()?.setItem(KEY_BASE, clean);
+    if (v) ls()?.setItem(KEY_BASE, v);
   },
 };
 

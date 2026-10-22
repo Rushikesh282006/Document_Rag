@@ -5,7 +5,7 @@ import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api, DEFAULT_BASE, settings } from "@/lib/api";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ModeSwitch } from "./ModeSwitch";
 
@@ -14,17 +14,14 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [base, setBase] = useState(DEFAULT_BASE);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { setBase(settings.base); }, []);
   useEffect(() => { if (ready && user) nav({ to: "/" }); }, [ready, user, nav]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
-      settings.base = base;
       const token = kind === "login" ? await api.login(email, password) : await api.register(email, password);
       await signIn(token);
       toast.success(kind === "login" ? "Welcome back" : "Account created");
@@ -46,7 +43,6 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
         <form onSubmit={submit} className="mt-6 space-y-4 rounded-lg border bg-card p-5">
           <div className="space-y-1.5"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div className="space-y-1.5"><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={mode === "live" ? 6 : 1} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-          {mode === "live" && <div className="space-y-1.5"><Label htmlFor="base">API base URL</Label><Input id="base" value={base} onChange={(e) => setBase(e.target.value)} className="font-mono text-xs" /></div>}
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Please wait…" : kind === "login" ? "Sign in" : "Register"}</Button>
           {mode === "mock" && <Button type="button" variant="outline" className="w-full" onClick={() => { setEmail("demo@tenant.dev"); setPassword("demo"); }}>Fill demo credentials</Button>}
         </form>
