@@ -19,15 +19,22 @@ class Settings(BaseSettings):
     # Application
     PROJECT_NAME: str = "Multi-Tenant RAG API"
     API_V1_STR: str = "/api/v1"
-    BACKEND_CORS_ORIGINS: List[str] = ["*"]
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = ["*"]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Any) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
             return [i.strip() for i in v.split(",") if i.strip()]
-        elif isinstance(v, (list, str)):
-            return v
+        elif isinstance(v, (list, tuple)):
+            return list(v)
         return ["*"]
 
     # Security & Auth
