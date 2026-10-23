@@ -24,6 +24,7 @@ slowapi>=0.1.10
 
 # RAG & Document Processing
 pypdf>=4.2.0
+fastembed>=0.3.0
 langchain>=0.2.5
 langchain-community>=0.2.5
 langchain-text-splitters>=0.2.0

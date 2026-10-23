@@ -1,10 +1,31 @@
 import logging
 from typing import List, Optional
 from langchain_core.embeddings import Embeddings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+class FastEmbedEmbeddings(Embeddings):
+    """Local, offline, CPU-optimized embedding generation via ONNX runtime."""
+
+    def __init__(self, model_name: str = "BAAI/bge-base-en-v1.5"):
+        try:
+            from fastembed import TextEmbedding
+            self._model = TextEmbedding(model_name=model_name)
+        except Exception as exc:
+            logger.error(f"Failed to initialize FastEmbed: {exc}")
+            raise
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        if not texts:
+            return []
+        embeddings = list(self._model.embed(texts))
+        return [e.tolist() for e in embeddings]
+
+    def embed_query(self, text: str) -> List[float]:
+        embedding = next(self._model.embed([text]))
+        return embedding.tolist()
 
 
 def get_embeddings_model() -> Embeddings:
@@ -17,13 +38,12 @@ def get_embeddings_model() -> Embeddings:
             raise RuntimeError(
                 "GOOGLE_API_KEY is not configured in .env. Please add your Google Gemini API key."
             )
-        
+        from langchain_google_genai import GoogleGenerativeAIEmbeddings
         return GoogleGenerativeAIEmbeddings(
             model="models/gemini-embedding-001",
             google_api_key=api_key,
             output_dimensionality=settings.EMBEDDING_DIMENSION,
         )
-
 
     elif provider == "openai":
         api_key = settings.OPENAI_API_KEY.strip() if settings.OPENAI_API_KEY else ""
@@ -38,26 +58,12 @@ def get_embeddings_model() -> Embeddings:
             dimensions=settings.EMBEDDING_DIMENSION,
         )
 
-    elif provider in ("huggingface", "hf"):
+    elif provider in ("huggingface", "hf", "fastembed", "local"):
         model_name = settings.HUGGINGFACE_EMBEDDING_MODEL or "BAAI/bge-base-en-v1.5"
-        api_key = settings.HUGGINGFACE_API_KEY.strip() if settings.HUGGINGFACE_API_KEY else ""
-
-        if api_key:
-            # Free Serverless Hugging Face Inference API
-            try:
-                from langchain_huggingface import HuggingFaceEndpointEmbeddings
-                return HuggingFaceEndpointEmbeddings(
-                    model=model_name,
-                    huggingfacehub_api_token=api_key,
-                )
-            except ImportError:
-                from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
-                return HuggingFaceInferenceAPIEmbeddings(
-                    api_key=api_key,
-                    model_name=model_name,
-                )
-        else:
-            # Local sentence-transformers execution (100% free, runs offline on CPU)
+        try:
+            return FastEmbedEmbeddings(model_name=model_name)
+        except Exception as exc:
+            logger.warning(f"FastEmbed initialization error: {exc}. Trying fallback...")
             try:
                 from langchain_community.embeddings import HuggingFaceEmbeddings
                 return HuggingFaceEmbeddings(
@@ -65,10 +71,9 @@ def get_embeddings_model() -> Embeddings:
                     model_kwargs={"device": "cpu"},
                     encode_kwargs={"normalize_embeddings": True},
                 )
-            except Exception as e:
+            except Exception as e2:
                 raise RuntimeError(
-                    f"To use local HuggingFace embeddings without an API key, install sentence-transformers: 'pip install sentence-transformers'. "
-                    f"Or provide a free HUGGINGFACE_API_KEY in your .env file. Error: {e}"
+                    f"Failed to load embedding model '{model_name}': {exc}; fallback error: {e2}"
                 )
 
     else:
