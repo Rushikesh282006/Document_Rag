@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DocumentSidebar } from "@/components/workspace/DocumentSidebar";
 import { Chat } from "@/components/workspace/Chat";
-import { ModeSwitch } from "@/components/ModeSwitch";
-import { ApiStatusModal } from "@/components/ApiStatusModal";
 import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Source } from "@/lib/api";
@@ -62,8 +60,6 @@ function Workspace() {
           <Layers className="size-4 text-primary" /><span className="font-display">Groundwork</span>
         </div>
         <div className="flex items-center gap-3">
-          <ApiStatusModal />
-          <ModeSwitch />
           <span className="hidden text-xs text-muted-foreground sm:inline">{user.email}</span>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out"><LogOut className="size-4" /></Button>
         </div>

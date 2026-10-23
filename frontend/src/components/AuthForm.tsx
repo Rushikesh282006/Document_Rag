@@ -7,11 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { ModeSwitch } from "./ModeSwitch";
-import { ApiStatusModal } from "./ApiStatusModal";
 
 export function AuthForm({ kind }: { kind: "login" | "register" }) {
-  const { signIn, user, ready, mode } = useAuth();
+  const { signIn, user, ready } = useAuth();
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,14 +44,10 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
           <div className="space-y-1.5"><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Please wait…" : kind === "login" ? "Sign in" : "Register"}</Button>
         </form>
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2">
-            <ModeSwitch />
-            <ApiStatusModal />
-          </div>
+        <div className="mt-4 text-center text-sm">
           {kind === "login"
-            ? <Link to="/register" className="text-primary hover:underline">Create account</Link>
-            : <Link to="/login" className="text-primary hover:underline">Have an account?</Link>}
+            ? <Link to="/register" className="text-primary hover:underline">Don't have an account? Create account</Link>
+            : <Link to="/login" className="text-primary hover:underline">Already have an account? Sign in</Link>}
         </div>
       </div>
     </div>

@@ -34,8 +34,8 @@ const ls = () => (typeof window === "undefined" ? null : window.localStorage);
 export const settings = {
   get token() { return ls()?.getItem(KEY_TOKEN) ?? null; },
   set token(v: string | null) { v ? ls()?.setItem(KEY_TOKEN, v) : ls()?.removeItem(KEY_TOKEN); },
-  get mode(): Mode { return (ls()?.getItem(KEY_MODE) as Mode) ?? "live"; },
-  set mode(v: Mode) { ls()?.setItem(KEY_MODE, v); },
+  get mode(): Mode { return "live"; },
+  set mode(v: Mode) { void v; },
   get base() {
     let val = ls()?.getItem(KEY_BASE);
     if (!val || (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" && val.includes("localhost"))) {
