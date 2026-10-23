@@ -43,9 +43,8 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
         <p className="mt-1 text-sm text-muted-foreground">Ask questions grounded in your own documents.</p>
         <form onSubmit={submit} className="mt-6 space-y-4 rounded-lg border bg-card p-5">
           <div className="space-y-1.5"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={mode === "live" ? 6 : 1} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          <div className="space-y-1.5"><Label htmlFor="pw">Password</Label><Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Please wait…" : kind === "login" ? "Sign in" : "Register"}</Button>
-          {mode === "mock" && <Button type="button" variant="outline" className="w-full" onClick={() => { setEmail("demo@tenant.dev"); setPassword("demo"); }}>Fill demo credentials</Button>}
         </form>
         <div className="mt-4 flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
