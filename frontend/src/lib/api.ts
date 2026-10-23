@@ -37,10 +37,25 @@ export const settings = {
   get mode(): Mode { return (ls()?.getItem(KEY_MODE) as Mode) ?? "live"; },
   set mode(v: Mode) { ls()?.setItem(KEY_MODE, v); },
   get base() {
-    return DEFAULT_BASE.replace(/\/$/, "");
+    let val = ls()?.getItem(KEY_BASE);
+    if (!val || (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" && val.includes("localhost"))) {
+      val = DEFAULT_BASE;
+    }
+    if (val && !val.includes("/api/v1")) {
+      val = val.replace(/\/$/, "") + "/api/v1";
+    }
+    return val.replace(/\/$/, "");
   },
   set base(v: string) {
-    if (v) ls()?.setItem(KEY_BASE, v);
+    if (v) {
+      let clean = v.trim().replace(/\/$/, "");
+      if (!clean.includes("/api/v1")) {
+        clean = clean + "/api/v1";
+      }
+      ls()?.setItem(KEY_BASE, clean);
+    } else {
+      ls()?.removeItem(KEY_BASE);
+    }
   },
 };
 
@@ -59,7 +74,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     res = await fetch(`${settings.base}${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, `Cannot reach backend at ${settings.base}`);
+    throw new ApiError(0, `Cannot reach backend at ${settings.base}. If hosted on Render free tier, the server may be waking up from sleep — please retry in 20-30 seconds.`);
   }
   if (res.status === 401) window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
   if (!res.ok) {
@@ -129,7 +144,7 @@ async function liveStream(body: QueryBody, h: StreamHandlers, signal: AbortSigna
     res = await fetch(`${settings.base}/query`, { method: "POST", headers, body: JSON.stringify(body), signal });
   } catch (e) {
     if ((e as Error).name === "AbortError") return h.onEnd();
-    return h.onError(`Cannot reach backend at ${settings.base}`);
+    return h.onError(`Cannot reach backend at ${settings.base}. The server may be waking up, please retry shortly.`);
   }
   if (res.status === 401) window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
   if (!res.ok || !res.body) return h.onError(`Query failed (${res.status})`);

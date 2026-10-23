@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ModeSwitch } from "./ModeSwitch";
+import { ApiStatusModal } from "./ApiStatusModal";
 
 export function AuthForm({ kind }: { kind: "login" | "register" }) {
   const { signIn, user, ready, mode } = useAuth();
@@ -47,7 +48,10 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
           {mode === "mock" && <Button type="button" variant="outline" className="w-full" onClick={() => { setEmail("demo@tenant.dev"); setPassword("demo"); }}>Fill demo credentials</Button>}
         </form>
         <div className="mt-4 flex items-center justify-between text-sm">
-          <ModeSwitch />
+          <div className="flex items-center gap-2">
+            <ModeSwitch />
+            <ApiStatusModal />
+          </div>
           {kind === "login"
             ? <Link to="/register" className="text-primary hover:underline">Create account</Link>
             : <Link to="/login" className="text-primary hover:underline">Have an account?</Link>}

@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from typing import List
@@ -5,6 +6,7 @@ import uuid
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     File,
     HTTPException,
     Request,
@@ -19,8 +21,10 @@ from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.models.document import Document, DocumentStatus
 from app.schemas.document import DocumentResponse, UploadResponse
+from app.services.document_service import DocumentProcessingService
 from app.worker.tasks import process_document_task
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB limit
@@ -38,6 +42,7 @@ async def upload_document(
     request: Request,
     current_user: CurrentUser,
     db: DatabaseSession,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="PDF file to ingest"),
 ) -> UploadResponse:
     # 1. Validation
@@ -102,11 +107,28 @@ async def upload_document(
     await db.commit()
     await db.refresh(document)
 
-    # 5. Dispatch Celery task
-    task = process_document_task.delay(str(document.id), str(current_user.id))
+    # 5. Dispatch task: Try Celery first; if Redis broker is unavailable, fallback to FastAPI BackgroundTasks
+    job_id = f"job-{document.id}"
+    dispatched = False
+    try:
+        task = process_document_task.delay(str(document.id), str(current_user.id))
+        job_id = task.id
+        dispatched = True
+        logger.info(f"Dispatched document {document.id} to Celery worker (job: {job_id})")
+    except Exception as exc:
+        logger.warning(
+            f"Celery dispatch failed ({exc}). Falling back to FastAPI BackgroundTasks for ingestion."
+        )
+
+    if not dispatched:
+        background_tasks.add_task(
+            DocumentProcessingService().execute_pipeline,
+            str(document.id),
+            str(current_user.id),
+        )
 
     return UploadResponse(
-        job_id=task.id,
+        job_id=job_id,
         document_id=document.id,
         filename=document.filename,
         status=document.status,

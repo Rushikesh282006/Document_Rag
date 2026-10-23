@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -53,6 +53,15 @@ def create_application() -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
+    # Global unhandled exception handler to guarantee JSON error response and CORS headers
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        logger.exception(f"Unhandled server error processing request: {exc}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Internal server error: {str(exc)}"},
+        )
+
     # Cross-Origin Resource Sharing (CORS) setup
     raw_origins = [str(o).rstrip("/") for o in settings.BACKEND_CORS_ORIGINS] if isinstance(settings.BACKEND_CORS_ORIGINS, list) else [str(settings.BACKEND_CORS_ORIGINS).rstrip("/")]
     has_wildcard = "*" in raw_origins or any(o == "*" for o in raw_origins)
@@ -60,7 +69,7 @@ def create_application() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[o for o in raw_origins if o != "*"] if not has_wildcard else [],
-        allow_origin_regex=r".*" if has_wildcard else r"https://.*\.vercel\.app|https?://(localhost|127\.0\.0\.1)(:\d+)?",
+        allow_origin_regex=r".*",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

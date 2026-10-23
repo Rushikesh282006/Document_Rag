@@ -82,8 +82,25 @@ class Settings(BaseSettings):
         return str(v)
 
     # Redis & Celery
+    REDIS_URL: Union[str, None] = None
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+
+    @field_validator("CELERY_BROKER_URL", mode="before")
+    @classmethod
+    def assemble_celery_broker(cls, v: Any) -> str:
+        redis_env = os.environ.get("REDIS_URL") or os.environ.get("REDIS_TLS_URL")
+        if redis_env:
+            return redis_env
+        return str(v) if v else "redis://localhost:6379/0"
+
+    @field_validator("CELERY_RESULT_BACKEND", mode="before")
+    @classmethod
+    def assemble_celery_backend(cls, v: Any) -> str:
+        redis_env = os.environ.get("REDIS_URL") or os.environ.get("REDIS_TLS_URL")
+        if redis_env:
+            return redis_env
+        return str(v) if v else "redis://localhost:6379/0"
 
     # Storage
     UPLOAD_DIR: str = "./uploads"
